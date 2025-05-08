@@ -26,9 +26,8 @@
 
                   
                     <!-- Form Start -->
-                    <form method="POST" action="{{ route('submit.comment') }}">
-                       
-
+                    <form method="POST" action="{{ route('submit.comment') }}" id="commentForm">
+                     @csrf
                         <!-- Category Selection -->
                         <div class="mb-3">
                             <label for="category" class="form-label">Select Category</label>
@@ -49,14 +48,44 @@
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </div>
-                    </form>
-                    <!-- Form End -->
 
+                    </form>
+                   
+                    <script>
+document.getElementById("commentForm").addEventListener("submit", function(event) {
+    event.preventDefault(); // Prevent normal form submission
+
+    var form = event.target;
+    var formData = new FormData(form); // Collect form data
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,  // CSRF token
+            'Accept': 'application/json',
+        },
+        body: formData,  // Send the form data in the request body
+    })
+    .then(response => response.json())  // Parse the JSON response
+    .then(data => {
+        if (data.success) {
+            alert('Your comment has been submitted successfully.');
+        } else {
+            alert('There was an error submitting your comment.');
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting form:', error);
+        alert('An error occurred while submitting your comment.');
+    });
+});
+</script>
+                  
                 </div>
             </div>
         </div>
     </div>
 </div>
-<script src="{{ asset('js/submit.js') }}"></script>
+
 </body>
 </html>

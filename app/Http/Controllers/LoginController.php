@@ -12,12 +12,16 @@ class LoginController extends Controller
      */
     public function showLoginForm()
     {
-        return view('user.login'); // Your login blade goes here
+        return view('login'); // Your login blade goes here
     }
 
     /**
      * Handle login form submission
      */
+    protected function authenticated(Request $request, $user)
+{
+    return redirect()->route('login'); // Redirect to the 'issue' route after login
+}
     public function login(Request $request)
     {
         $request->validate([
@@ -28,17 +32,14 @@ class LoginController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials, $request->filled('remember'))) {
-            // Check if user is admin
-            if (Auth::user()->is_admin) {
-                return redirect()->route('admin.dashboard');
-            }
-
-            Auth::logout();
-            return redirect()->route('login.form')->withErrors([
-                'email' => 'Access denied. You are not an admin.',
-            ]);
+            // Regenerate the session to prevent session fixation
+            $request->session()->regenerate();
+    
+            // Redirect to the intended page or default to 'home'
+            return redirect()->intended(route('home'));
         }
-
+    
+        // If login fails, return with an error message
         return back()->withErrors([
             'email' => 'Invalid credentials.',
         ]);
@@ -47,9 +48,12 @@ class LoginController extends Controller
     /**
      * Logout user
      */
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+    
         return redirect()->route('login.form');
     }
 }
